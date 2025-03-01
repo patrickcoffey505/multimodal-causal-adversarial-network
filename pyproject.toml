@@ -1,0 +1,32 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "multimodal_causal_adversarial_network"
+version = "0.0.1"
+description = "The goal of this project is to characterize the dynamic bidirectional effective connectivity among distributed brain regions during visual categorization by leveraging high-frequency (beta/gamma band) EEG signals and simultaneous fMRI recordings through an enhanced multimodal causal adversarial network architecture."
+authors = [
+  { name = "Patrick Coffey" },
+]
+
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    
+]
+requires-python = "~=3.12"
+
+[tool.black]
+line-length = 99
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+)/
+'''
+
+[tool.ruff.lint.isort]
+known_first_party = ["multimodal_causal_adversarial_network"]
+force_sort_within_sections = true
