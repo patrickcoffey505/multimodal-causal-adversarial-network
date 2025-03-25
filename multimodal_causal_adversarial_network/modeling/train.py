@@ -2,15 +2,14 @@ from pathlib import Path
 
 import typer
 from loguru import logger
-from tqdm import tqdm
-
-from multimodal_causal_adversarial_network.config import MODELS_DIR, PROCESSED_DATA_DIR
-
-app = typer.Typer()
-
 import tensorflow as tf
 import numpy as np
-from src.mcan_architecture import MCAN
+
+from multimodal_causal_adversarial_network.config import MODELS_DIR, PROCESSED_DATA_DIR
+from multimodal_causal_adversarial_network.dataset import BrainDataset
+from multimodal_causal_adversarial_network.modeling.mcan_architecture import MCAN
+
+app = typer.Typer()
 
 
 class MCANTrainer:
@@ -25,14 +24,22 @@ class MCANTrainer:
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
 
     def discriminator_loss(self, real, generated):
-        real_loss = tf.reduce_mean(tf.keras.losses.binary_crossentropy(tf.ones_like(real), real))
-        fake_loss = tf.reduce_mean(
-            tf.keras.losses.binary_crossentropy(tf.zeros_like(generated), generated)
+        """Calculate discriminator loss for a single trial"""
+        real_loss = tf.keras.losses.binary_crossentropy(
+            tf.ones_like(real), real, from_logits=False
+        )
+        fake_loss = tf.keras.losses.binary_crossentropy(
+            tf.zeros_like(generated), generated, from_logits=False
         )
         return real_loss + fake_loss
 
     @tf.function
     def train_step(self, x_f, x_e):
+        """Train step for a single trial"""
+        # Add batch dimension for model
+        x_f = tf.expand_dims(x_f, 0)
+        x_e = tf.expand_dims(x_e, 0)
+
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             # Generate outputs
             outputs = self.model([x_f, x_e], training=True)
@@ -88,35 +95,65 @@ class MCANTrainer:
 
         return total_loss
 
-    def train(self, train_dataset, epochs):
+    def train(self, dataset, epochs):
+        """Train the model for specified number of epochs"""
         for epoch in range(epochs):
             total_loss = 0
-            num_batches = 0
+            num_trials = 0
 
-            for x_f_batch, x_e_batch in train_dataset:
-                loss = self.train_step(x_f_batch, x_e_batch)
+            # Iterate through individual trials
+            for x_f, x_e in dataset:
+                loss = self.train_step(x_f, x_e)
                 total_loss += loss
-                num_batches += 1
+                num_trials += 1
 
-            avg_loss = total_loss / num_batches
-            print(f"Epoch {epoch + 1}, Average Loss: {avg_loss}")
+                if num_trials % 100 == 0:
+                    logger.info(f"Epoch {epoch + 1}, Trial {num_trials}, Loss: {loss:.4f}")
+
+            avg_loss = total_loss / num_trials
+            logger.info(f"Epoch {epoch + 1}, Average Loss: {avg_loss:.4f}")
 
 
 @app.command()
 def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    features_path: Path = PROCESSED_DATA_DIR / "features.csv",
-    labels_path: Path = PROCESSED_DATA_DIR / "labels.csv",
-    model_path: Path = MODELS_DIR / "model.pkl",
-    # -----------------------------------------
+    data_dir: Path = PROCESSED_DATA_DIR,
+    model_save_path: Path = MODELS_DIR / "mcan_model",
+    epochs: int = 10,
 ):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Training some model...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Modeling training complete.")
-    # -----------------------------------------
+    """Train the MCAN model"""
+    logger.info("Starting model training...")
+
+    try:
+        # Load dataset
+        brain_dataset = BrainDataset(data_dir=data_dir, shuffle=True)
+        dataset = brain_dataset.get_dataset()
+
+        # Get shapes from first trial
+        first_trial = next(iter(dataset))
+        num_regions = first_trial[0].shape[0]
+        num_timepoints_f = first_trial[0].shape[1]
+        num_timepoints_e = first_trial[1].shape[1]
+
+        # Initialize model
+        model = MCAN(
+            num_regions=num_regions,
+            num_timepoints_f=num_timepoints_f,
+            num_timepoints_e=num_timepoints_e,
+        )
+
+        # Initialize trainer
+        trainer = MCANTrainer(model)
+
+        # Train model
+        logger.info("Training model...")
+        trainer.train(dataset, epochs)
+
+        # Save model
+        model.save(model_save_path)
+        logger.success(f"Model saved to {model_save_path}")
+
+    except Exception as e:
+        logger.error(f"Error in training pipeline: {str(e)}")
 
 
 if __name__ == "__main__":

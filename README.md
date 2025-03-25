@@ -47,9 +47,9 @@ TODO
 │
 ├── setup.cfg          <- Configuration file for flake8
 │
-└── src   <- Source code for use in this project.
+└── multimodal_causal_adversarial_network   <- Source code for use in this project.
     │
-    ├── __init__.py             <- Makes src a Python module
+    ├── __init__.py             <- Makes multimodal_causal_adversarial_network a Python module
     │
     ├── config.py               <- Store useful variables and configuration
     │

@@ -16,6 +16,7 @@ PYTHON_INTERPRETER = python
 requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	$(PYTHON_INTERPRETER) -m pip install -e .
 	
 
 
@@ -57,7 +58,7 @@ create_environment:
 ## Make Dataset
 .PHONY: data
 data: requirements
-	$(PYTHON_INTERPRETER) src/dataset.py
+	$(PYTHON_INTERPRETER) src/multimodal-causal-adversarial-network/dataset.py
 
 
 #################################################################################
