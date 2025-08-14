@@ -16,8 +16,8 @@ PYTHON_INTERPRETER = python
 requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	$(PYTHON_INTERPRETER) -m pip install -e .
 	
-
 
 
 ## Delete all compiled Python files
@@ -29,14 +29,14 @@ clean:
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	flake8 multimodal_causal_adversarial_network
-	isort --check --diff --profile black multimodal_causal_adversarial_network
-	black --check --config pyproject.toml multimodal_causal_adversarial_network
+	flake8 src
+	isort --check --diff --profile black src
+	black --check --config pyproject.toml src
 
 ## Format source code with black
 .PHONY: format
 format:
-	black --config pyproject.toml multimodal_causal_adversarial_network
+	black --config pyproject.toml src
 
 
 
@@ -44,10 +44,10 @@ format:
 ## Set up python interpreter environment
 .PHONY: create_environment
 create_environment:
-	@bash -c "if [ ! -z `which virtualenvwrapper.sh` ]; then source `which virtualenvwrapper.sh`; mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); else mkvirtualenv.bat $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); fi"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
+	pyenv virtualenv $(PYTHON_VERSION) $(PROJECT_NAME)
+	pyenv local $(PROJECT_NAME)
+	@echo ">>> New virtualenv created. Activate with:\npyenv activate $(PROJECT_NAME)"
 	
-
 
 
 #################################################################################
@@ -58,7 +58,7 @@ create_environment:
 ## Make Dataset
 .PHONY: data
 data: requirements
-	$(PYTHON_INTERPRETER) multimodal_causal_adversarial_network/dataset.py
+	$(PYTHON_INTERPRETER) src/multimodal-causal-adversarial-network/dataset.py
 
 
 #################################################################################

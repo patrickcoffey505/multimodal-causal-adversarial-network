@@ -6,6 +6,14 @@
 
 The goal of this project is to characterize the dynamic bidirectional effective connectivity among distributed brain regions during visual categorization by leveraging high-frequency (beta/gamma band) EEG signals and simultaneous fMRI recordings through an enhanced multimodal causal adversarial network architecture.
 
+This repository contains an implementation of the MCAN model in TensorFlow 2.x. The model learns dynamic effective connectivity from multimodal neuroimaging data (fMRI and EEG) using an adversarial framework.
+
+The data can be found here: https://www.dropbox.com/scl/fo/ixtf7zwh4066fcc3evdfn/AD8-HENbfDjILdOSafV4qN4?rlkey=5w0a3lgumhroshdn1kxbbo1ov&e=1&dl=0
+
+## Requirements
+
+TODO
+
 ## Project Organization
 
 ```

@@ -1,5 +1,8 @@
 # Data
 /data/
+/clean/
+simulated_eeg_data.mat
+*.zip
 
 # Mac OS-specific storage files
 .DS_Store
